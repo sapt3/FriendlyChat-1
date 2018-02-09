@@ -103,8 +103,6 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseStorage = FirebaseStorage.getInstance();
         mChatPhotosStorageReference = mFirebaseStorage.getReference().child("chat_photos");
 
-        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
-
         // Initialize message ListView and its adapter
         List<FriendlyMessage> friendlyMessages = new ArrayList<>();
         mMessageAdapter = new MessageAdapter(this, R.layout.item_message, friendlyMessages);
@@ -182,15 +180,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
-                .setDeveloperModeEnabled(BuildConfig.DEBUG)
-                .build();
-        mFirebaseRemoteConfig.setConfigSettings(configSettings);
-
-        Map<String, Object> defaultConfigMap = new HashMap<>();
-        defaultConfigMap.put(FRIENDLY_MSG_LENGTH_KEY, DEFAULT_MSG_LENGTH_LIMIT);
-        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
-        fetchConfig();
     }
 
     @Override
@@ -298,39 +287,6 @@ public class MainActivity extends AppCompatActivity {
         mUsername = ANONYMOUS;
         mMessageAdapter.clear();
         detachDatabaseReadListener();
-    }
-
-    public void fetchConfig()
-    {
-        long cacheExpiration = 3600;
-
-        if(mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled())
-        {
-            cacheExpiration = 0;
-        }
-
-        mFirebaseRemoteConfig.fetch(cacheExpiration).addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void aVoid) {
-                mFirebaseRemoteConfig.activateFetched();
-                applyRetrievedLengthLimit();
-
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-
-                Log.w(TAG,"Error fetching config",e);
-                applyRetrievedLengthLimit();
-            }
-        });
-    }
-
-    private void applyRetrievedLengthLimit()
-    {
-        Long friendly_msg_length = mFirebaseRemoteConfig.getLong(FRIENDLY_MSG_LENGTH_KEY);
-        mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(friendly_msg_length.intValue())});
-        Log.d(TAG,FRIENDLY_MSG_LENGTH_KEY+" = "+friendly_msg_length);
     }
 
 }
